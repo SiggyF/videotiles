@@ -67,36 +67,20 @@ export class VideoTileDecoder {
   }
 
   /**
-   * Tekent het actuele frame rechtstreeks vanuit het VideoFrame naar het canvas.
+  /**
+   * Tekent het actuele VideoFrame rechtstreeks op de tegelcoördinaten.
    * @param {number} frameIndex 
    * @param {CanvasRenderingContext2D} ctx 
    * @param {number} dx 
    * @param {number} dy 
    * @param {number} dw 
    * @param {number} dh 
-   * @param {number} spin 1 of -1
-   * @param {number} alpha
    */
-  drawFrame(frameIndex, ctx, dx, dy, dw, dh, spin = 1, alpha = 1.0) {
-    if (!this.isReady || this.frames.length === 0) return false;
-
+  drawTile(frameIndex, ctx, dx, dy, dw, dh) {
+    if (!this.isReady || this.frames.length === 0) return;
     const idx = Math.abs(frameIndex) % this.frames.length;
     const frame = this.frames[idx];
-    if (!frame) return false;
-
-    ctx.save();
-    ctx.globalAlpha = alpha;
-    ctx.translate(dx + dw / 2, dy + dh / 2);
-
-    if (spin === -1) {
-      ctx.scale(-1, 1);
-    }
-
-    // Teken het native VideoFrame direct naar het canvas
-    ctx.drawImage(frame, -dw / 2, -dh / 2, dw, dh);
-    ctx.restore();
-
-    return true;
+    ctx.drawImage(frame, dx, dy, dw, dh);
   }
 
   destroy() {

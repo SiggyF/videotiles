@@ -1,4 +1,3 @@
-import { drawVortex } from './patterns/vortex.js';
 import { VideoTileDecoder } from './decoder.js';
 
 // Initialiseer de WebCodecs decoder voor de WebM videotile
@@ -123,7 +122,6 @@ function render() {
 
   const zFloat = map.getZoom();
   const zBase = Math.floor(zFloat);
-  const morphT = zFloat - zBase; // Fractie 0.0 tot 1.0 voor vormverandering
 
   // Bereken totale wereldresolutie op dit continue zoomniveau
   const worldDim = Math.round(256 * Math.pow(2, zFloat));
@@ -144,8 +142,8 @@ function render() {
     const width = pSE.x - pNW.x;
     const height = pSE.y - pNW.y;
 
-    // Teken de wervelcascade met continue mitose via WebCodecs video frames
-    drawVortex(ctx, pNW, width, height, tile, currentFrame, totalFrames, morphT, videoDecoder);
+    // Teken het WebCodecs videotile-frame direct op de tegelcoördinaten
+    videoDecoder.drawTile(currentFrame, ctx, pNW.x, pNW.y, width, height);
   }
 }
 
