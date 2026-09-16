@@ -43,6 +43,9 @@ export class VideoTileDecoder {
         throw new Error('Failed to get decoder configuration from video track');
       }
 
+      // Preserve transparent alpha channel in WebCodecs output VideoFrame
+      config.alpha = 'keep';
+
       this.decoder.configure(config);
 
       const sink = new EncodedPacketSink(videoTrack);

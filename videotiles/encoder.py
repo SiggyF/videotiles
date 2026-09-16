@@ -21,6 +21,7 @@ def encode_frames_to_webm(
         "-i", str(input_pattern),
         "-c:v", "libvpx-vp9",
         "-pix_fmt", "yuva420p",
+        "-metadata:s:v:0", "alpha_mode=1",
         "-crf", str(crf),
         "-b:v", "0",
         "-auto-alt-ref", "0",

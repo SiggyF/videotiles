@@ -2,7 +2,7 @@ import { VideoTileDecoder } from './decoder.js';
 
 // Initialiseer de WebCodecs decoder voor de WebM videotile
 const videoDecoder = new VideoTileDecoder();
-await videoDecoder.load('./tiles/vortex.webm');
+await videoDecoder.load('./tiles/vortex.webm?v=alpha1');
 
 // MapLibre GL kaart initialisatie met pure zwarte achtergrond
 const map = new maplibregl.Map({
