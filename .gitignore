@@ -1,0 +1,11 @@
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+node_modules/
+dist/
+.DS_Store
+*.webm
+*.mp4
+frames/
+output/

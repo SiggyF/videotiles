@@ -1,0 +1,18 @@
+[project]
+name = "videotiles"
+version = "0.1.0"
+description = "Synchronized recursive video map tiles generator and viewer"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "click>=8.5.0",
+    "numpy>=2.5.3",
+    "pillow>=12.3.0",
+]
+
+[project.scripts]
+videotiles = "videotiles.cli:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
