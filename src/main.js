@@ -47,6 +47,7 @@ let showGrid = true;
 const patternSelect = document.getElementById('pattern-select');
 const zoomLabel = document.getElementById('zoom-level');
 const tileCountLabel = document.getElementById('tile-count');
+const playBtn = document.getElementById('play-btn');
 const toggleGrid = document.getElementById('toggle-grid');
 
 // Vul de select-opties met de 5 patronen
@@ -172,6 +173,17 @@ function tick() {
     animationId = requestAnimationFrame(tick);
   }
 }
+
+playBtn.addEventListener('click', () => {
+  isPlaying = !isPlaying;
+  playBtn.textContent = isPlaying ? 'Pause' : 'Play';
+  playBtn.className = isPlaying ? 'primary' : '';
+  if (isPlaying) {
+    tick();
+  } else if (animationId) {
+    cancelAnimationFrame(animationId);
+  }
+});
 
 map.on('resize', () => {
   resizeCanvas();
