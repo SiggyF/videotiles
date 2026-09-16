@@ -5,7 +5,7 @@ __pycache__/
 node_modules/
 dist/
 .DS_Store
-*.webm
 *.mp4
+!tiles/*.webm
 frames/
 output/

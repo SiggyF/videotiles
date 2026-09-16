@@ -1,22 +1,17 @@
-// 1. Vortex Cascade (Rustige, Elegante Hydrodynamische Wervels)
-// Minimalistisch en rustig: 2 vloeiende stroomlijnen per wervel met een rustige rotatie.
-// Geen drukke deeltjes of felle flitsen, maar een kalme, majestueuze wervelbeweging.
-// Bij inzoomen (t: 0 -> 1) splitst de centrale wervel zich geleidelijk in 4 kwadrant-wervels.
+// 1. Vortex Cascade (Hardware-accelerated WebCodecs Video Tiles)
+// Rendert rechtstreeks de frames uit de vooraf gerenderde VP9 WebM video ('tiles/vortex.webm').
+// Bij inzoomen (t: 0 -> 1) splitst de centrale video zich via mitose in 4 kwadrant-videotegels.
 
-export function drawVortex(ctx, pNW, width, height, tile, frame, totalFrames, morphT = 0) {
-  // Rustige, statige rotatie: 1 omwenteling per 180 frames
-  const baseAngle = (frame / totalFrames) * 2 * Math.PI;
+export function drawVortex(ctx, pNW, width, height, tile, frame, totalFrames, morphT = 0, decoder = null) {
   const t = morphT * morphT * (3 - 2 * morphT); // Smoothstep
 
   ctx.save();
   ctx.translate(pNW.x, pNW.y);
 
-  // Bepaal de wervels die we moeten tekenen:
-  // Als t heel klein is (macro-weergave), tekenen we 1 rustige wervel in het midden.
-  // Naarmate t toeneemt, bewegen 4 dochterwervels zachtjes uit elkaar.
+  // Bepaal de wervelposities
   const centers = [];
   if (t < 0.05) {
-    // 1 enkele centrale wervel
+    // 1 enkele centrale videotile
     centers.push({
       cx: width * 0.5,
       cy: height * 0.5,
@@ -25,7 +20,7 @@ export function drawVortex(ctx, pNW, width, height, tile, frame, totalFrames, mo
       opacity: 1.0,
     });
   } else {
-    // 4 dochterwervels in mitose
+    // 4 dochter-videotiles in mitose
     for (let qx = 0; qx < 2; qx++) {
       for (let qy = 0; qy < 2; qy++) {
         const targetX = (qx + 0.5) * (width / 2);
@@ -41,40 +36,24 @@ export function drawVortex(ctx, pNW, width, height, tile, frame, totalFrames, mo
   }
 
   for (const v of centers) {
-    const rot = baseAngle * v.spin;
+    const size = v.radius * 2.6;
 
-    // 2 sierlijke, tegenovergestelde wervelarmen (180 graden verschoven)
-    for (let arm = 0; arm < 2; arm++) {
-      const armOffset = arm * Math.PI;
+    if (decoder && decoder.isReady) {
+      // ECHTE VIDEO: Teken het hardware-gedecodeerde VideoFrame uit de WebM
+      decoder.drawFrame(frame, ctx, v.cx - size / 2, v.cy - size / 2, size, size, v.spin, v.opacity);
+    } else {
+      // Fallback tijdens asynchrone WebM-inlaadstap
+      const rot = ((frame / totalFrames) * 2 * Math.PI) * v.spin;
+      ctx.save();
+      ctx.translate(v.cx, v.cy);
+      ctx.rotate(rot);
       ctx.beginPath();
-
-      const steps = 24;
-      for (let s = 0; s <= steps; s++) {
-        const frac = s / steps;
-        const r = frac * v.radius;
-        // Zachte logaritmische kromming naar buiten
-        const theta = rot + armOffset + frac * 2.0 * v.spin;
-        const px = v.cx + r * Math.cos(theta);
-        const py = v.cy + r * Math.sin(theta);
-
-        if (s === 0) {
-          ctx.moveTo(px, py);
-        } else {
-          ctx.lineTo(px, py);
-        }
-      }
-
       ctx.strokeStyle = `rgba(0, 210, 255, ${0.45 * v.opacity})`;
       ctx.lineWidth = 2.0;
-      ctx.lineCap = 'round';
+      ctx.arc(0, 0, v.radius * 0.8, 0, Math.PI);
       ctx.stroke();
+      ctx.restore();
     }
-
-    // Rustig, klein oplichtend centrum (zonder hysterisch knipperen)
-    ctx.beginPath();
-    ctx.fillStyle = `rgba(200, 245, 255, ${0.8 * v.opacity})`;
-    ctx.arc(v.cx, v.cy, 2.5, 0, Math.PI * 2);
-    ctx.fill();
   }
 
   ctx.restore();

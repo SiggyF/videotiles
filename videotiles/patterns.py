@@ -3,19 +3,23 @@ import numpy as np
 from PIL import Image, ImageDraw
 
 
-def generate_vortex_frame(frame: int, total_frames: int, size: int = 256) -> Image.Image:
-    """Generate a single frame of the calm vortex cascade with alpha transparency."""
-    img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+def generate_vortex_frame(frame: int, total_frames: int, size: int = 512) -> Image.Image:
+    """Generate a single frame of the calm vortex with 2x supersampling for antialiasing."""
+    # 2x supersampling for high-quality antialiased lines
+    scale = 2
+    render_size = size * scale
+    img = Image.new("RGBA", (render_size, render_size), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
-    base_angle = (frame / total_frames) * 2 * np.pi
-    cx, cy = size / 2, size / 2
-    max_r = size * 0.38
 
-    # 2 graceful spiral arms
+    base_angle = (frame / total_frames) * 2 * np.pi
+    cx, cy = render_size / 2, render_size / 2
+    max_r = render_size * 0.38
+
+    # 2 graceful spiral arms (180 degrees apart)
     for arm in range(2):
         arm_offset = arm * np.pi
         pts = []
-        steps = 30
+        steps = 60
         for s in range(steps + 1):
             frac = s / steps
             r = frac * max_r
@@ -24,12 +28,24 @@ def generate_vortex_frame(frame: int, total_frames: int, size: int = 256) -> Ima
             py = cy + r * np.sin(theta)
             pts.append((px, py))
 
-        draw.line(pts, fill=(0, 210, 255, 120), width=2)
+        # Glowing outer stream
+        draw.line(pts, fill=(0, 210, 255, 140), width=4 * scale)
+        # Bright inner core stream
+        draw.line(pts, fill=(180, 245, 255, 220), width=2 * scale)
 
-    # Core
-    draw.ellipse([cx - 3, cy - 3, cx + 3, cy + 3], fill=(200, 245, 255, 220))
+    # Glowing center core
+    core_r = 4 * scale
+    draw.ellipse(
+        [cx - core_r * 2, cy - core_r * 2, cx + core_r * 2, cy + core_r * 2],
+        fill=(0, 210, 255, 80),
+    )
+    draw.ellipse(
+        [cx - core_r, cy - core_r, cx + core_r, cy + core_r],
+        fill=(220, 250, 255, 255),
+    )
 
-    return img
+    # Downsample to target size with Lanczos filter for smooth edges
+    return img.resize((size, size), Image.Resampling.LANCZOS)
 
 
 PATTERNS = {

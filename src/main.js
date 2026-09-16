@@ -1,4 +1,11 @@
 import { drawVortex } from './patterns/vortex.js';
+import { VideoTileDecoder } from './decoder.js';
+
+// Initialiseer de WebCodecs decoder voor de echte WebM videotile
+const videoDecoder = new VideoTileDecoder();
+videoDecoder.load('./tiles/vortex.webm').catch((err) => {
+  console.warn('WebCodecs video kon niet laden, terugvallen op vector:', err);
+});
 
 // MapLibre GL kaart initialisatie met pure zwarte achtergrond
 const map = new maplibregl.Map({
@@ -139,8 +146,8 @@ function render() {
     const width = pSE.x - pNW.x;
     const height = pSE.y - pNW.y;
 
-    // Teken de wervelcascade met continue mitose
-    drawVortex(ctx, pNW, width, height, tile, currentFrame, totalFrames, morphT);
+    // Teken de wervelcascade met continue mitose via WebCodecs video frames
+    drawVortex(ctx, pNW, width, height, tile, currentFrame, totalFrames, morphT, videoDecoder);
   }
 }
 
