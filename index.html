@@ -18,10 +18,45 @@
       width: 100%;
       height: 100%;
     }
+    #pixel-hud {
+      position: absolute;
+      bottom: 24px;
+      left: 24px;
+      z-index: 10;
+      pointer-events: none;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(0, 210, 255, 0.25);
+      border-radius: 8px;
+      padding: 10px 16px;
+      color: #e2e8f0;
+      font-size: 13px;
+      letter-spacing: 0.2px;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.6);
+      line-height: 1.5;
+    }
+    .hud-title {
+      color: #94a3b8;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-bottom: 2px;
+    }
+    .hud-highlight {
+      color: #00f7ff;
+      font-weight: 600;
+    }
   </style>
 </head>
 <body>
   <div id="map"></div>
+
+  <div id="pixel-hud">
+    <div class="hud-title">Recursieve Kaartschaal</div>
+    <div>Zoom <span id="hud-zoom" class="hud-highlight">0.00</span> · <span id="hud-total" class="hud-highlight">65.536 px</span></div>
+    <div style="color: #94a3b8; font-size: 12px;"><span id="hud-dim">256 × 256</span> px wereldformaat</div>
+  </div>
 
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
   <script type="module" src="./src/main.js"></script>

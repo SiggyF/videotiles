@@ -92,6 +92,19 @@ function getVisibleTilesForZoom(zoom) {
   return tiles;
 }
 
+const hudZoom = document.getElementById('hud-zoom');
+const hudTotal = document.getElementById('hud-total');
+const hudDim = document.getElementById('hud-dim');
+
+function formatPixelCount(pixels) {
+  if (pixels >= 1e15) return `${(pixels / 1e15).toFixed(1)} Petapixels`;
+  if (pixels >= 1e12) return `${(pixels / 1e12).toFixed(1)} Terapixels`;
+  if (pixels >= 1e9) return `${(pixels / 1e9).toFixed(1)} Gigapixels`;
+  if (pixels >= 1e6) return `${(pixels / 1e6).toFixed(1)} Megapixels`;
+  if (pixels >= 1e3) return `${Math.round(pixels / 1e3)} Kilopixels`;
+  return `${Math.round(pixels)} pixels`;
+}
+
 // Renderloop: vloeiende geometrische wervelcascade (mitose / morphing)
 function render() {
   const rect = map.getCanvas().getBoundingClientRect();
@@ -100,6 +113,14 @@ function render() {
   const zFloat = map.getZoom();
   const zBase = Math.floor(zFloat);
   const morphT = zFloat - zBase; // Fractie 0.0 tot 1.0 voor vormverandering
+
+  // Bereken totale wereldresolutie op dit continue zoomniveau
+  const worldDim = Math.round(256 * Math.pow(2, zFloat));
+  const totalPixels = worldDim * worldDim;
+
+  if (hudZoom) hudZoom.textContent = zFloat.toFixed(2);
+  if (hudTotal) hudTotal.textContent = formatPixelCount(totalPixels);
+  if (hudDim) hudDim.textContent = `${worldDim.toLocaleString('nl-NL')} × ${worldDim.toLocaleString('nl-NL')}`;
 
   const tiles = getVisibleTilesForZoom(zBase);
 
