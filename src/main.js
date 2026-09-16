@@ -110,9 +110,9 @@ function tileToLngLat(x, y, zoom) {
   return [lng, lat];
 }
 
-// Bepaal de momenteel zichtbare tegels in de viewport
-function getVisibleTiles() {
-  const zoom = Math.floor(map.getZoom());
+// Bepaal de zichtbare tegels voor een specifiek zoomniveau
+function getVisibleTilesForZoom(zoom) {
+  const n = Math.pow(2, zoom);
   const bounds = map.getBounds();
   const nw = bounds.getNorthWest();
   const se = bounds.getSouthEast();
@@ -131,22 +131,18 @@ function getVisibleTiles() {
       tiles.push({ z: zoom, x, y });
     }
   }
-  return { zoom, tiles };
+  return tiles;
 }
 
-// Renderloop: synchroon frame N tekenen voor alle zichtbare tegels
-function render() {
-  const rect = map.getCanvas().getBoundingClientRect();
-  ctx.clearRect(0, 0, rect.width, rect.height);
-
-  const { zoom, tiles } = getVisibleTiles();
-  zoomLabel.textContent = `${map.getZoom().toFixed(2)} (Z: ${zoom})`;
-  tileCountLabel.textContent = tiles.length;
-  frameDisplay.textContent = `${currentFrame} / ${totalFrames}`;
-  statusDisplay.textContent = isPlaying ? 'Afspelen (60fps)' : 'Gepauzeerd';
+// Render een specifieke zoomlaag met continue opaciteit
+function renderTileLayer(tiles, alpha, isChild, zFloat) {
+  if (alpha <= 0.01 || tiles.length === 0) return;
 
   const pattern = PATTERNS[currentPatternKey];
   if (!pattern) return;
+
+  ctx.save();
+  ctx.globalAlpha = alpha;
 
   for (const tile of tiles) {
     const nw = tileToLngLat(tile.x, tile.y, tile.z);
@@ -157,21 +153,57 @@ function render() {
     const width = pSE.x - pNW.x;
     const height = pSE.y - pNW.y;
 
-    // Teken het geselecteerde recursieve patroon
-    pattern.draw(ctx, pNW, width, height, tile, currentFrame, totalFrames);
+    // Teken het geselecteerde patroon (geeft zFloat mee voor schaalcontinuïteit)
+    pattern.draw(ctx, pNW, width, height, tile, currentFrame, totalFrames, zFloat);
 
-    // Optionele tegelgrenzen en XYZ-labels
+    // Optionele tegelgrenzen en labels
     if (showGrid) {
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
-      ctx.lineWidth = 1;
-      ctx.setLineDash([4, 4]);
+      ctx.strokeStyle = isChild ? 'rgba(56, 189, 248, 0.35)' : 'rgba(255, 255, 255, 0.2)';
+      ctx.lineWidth = isChild ? 1.5 : 1;
+      ctx.setLineDash(isChild ? [6, 4] : [4, 4]);
       ctx.strokeRect(pNW.x, pNW.y, width, height);
       ctx.setLineDash([]);
 
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
-      ctx.font = '10px monospace';
-      ctx.fillText(`${tile.z}/${tile.x}/${tile.y}`, pNW.x + 6, pNW.y + 14);
+      ctx.fillStyle = isChild ? 'rgba(56, 189, 248, 0.85)' : 'rgba(255, 255, 255, 0.7)';
+      ctx.font = `${isChild ? 11 : 10}px monospace`;
+      ctx.fillText(`${tile.z}/${tile.x}/${tile.y}`, pNW.x + 6, pNW.y + (isChild ? 26 : 14));
     }
+  }
+
+  ctx.restore();
+}
+
+// Renderloop: continue multi-level zoom blending over alle lagen heen
+function render() {
+  const rect = map.getCanvas().getBoundingClientRect();
+  ctx.clearRect(0, 0, rect.width, rect.height);
+
+  const zFloat = map.getZoom();
+  const zBase = Math.floor(zFloat);
+  const frac = zFloat - zBase; // 0.0 tot 1.0
+
+  // Hermite smoothstep voor vloeiende, niet-lineaire perceptuele overgang
+  const t = frac * frac * (3 - 2 * frac);
+
+  const baseTiles = getVisibleTilesForZoom(zBase);
+  const childZoom = Math.min(18, zBase + 1);
+  const childTiles = childZoom > zBase ? getVisibleTilesForZoom(childZoom) : [];
+
+  const totalVisible = baseTiles.length + (childTiles.length > 0 ? childTiles.length : 0);
+  const basePercent = Math.round((1 - t) * 100);
+  const childPercent = Math.round(t * 100);
+
+  zoomLabel.textContent = `${zFloat.toFixed(2)} (Z${zBase}: ${basePercent}% / Z${childZoom}: ${childPercent}%)`;
+  tileCountLabel.textContent = `${totalVisible} (${baseTiles.length} + ${childTiles.length})`;
+  frameDisplay.textContent = `${currentFrame} / ${totalFrames}`;
+  statusDisplay.textContent = isPlaying ? 'Afspelen (60fps)' : 'Gepauzeerd';
+
+  // 1. Render basis zoomniveau (ouderlaag) met geleidelijk afnemende opaciteit (1 - t)
+  renderTileLayer(baseTiles, 1 - t, false, zFloat);
+
+  // 2. Render volgend zoomniveau (kindlaag) met geleidelijk toenemende opaciteit (t)
+  if (childTiles.length > 0) {
+    renderTileLayer(childTiles, t, true, zFloat);
   }
 }
 

@@ -1,10 +1,11 @@
 // 4. Droste Zoom (Oneindige Logaritmische Spiraal / Zoomtunnel)
 // Naarmate tijd vordert van frame 0 naar totalFrames groeit de schaal met factor 2 (exact 1 zoomniveau).
 
-export function drawDroste(ctx, pNW, width, height, tile, frame, totalFrames) {
+export function drawDroste(ctx, pNW, width, height, tile, frame, totalFrames, zFloat = 0) {
   const cx = pNW.x + width / 2;
   const cy = pNW.y + height / 2;
-  const zoomFactor = Math.pow(2, frame / totalFrames); // verdubbelt in 1 cyclus
+  const zoomFraction = zFloat ? (zFloat % 1) : 0;
+  const zoomFactor = Math.pow(2, (frame / totalFrames) + zoomFraction); // Continue schaalvergroting
 
   ctx.save();
   ctx.translate(cx, cy);
