@@ -1,6 +1,6 @@
-// 3. Hilbert Subdivisie (Vormverandering via Fractale Vouwing)
-// Bij inzoomen (t: 0 -> 1) vouwt elk lijnsegment van de Hilbert-curve zich soepel uit
-// van een simpele macro-boog naar 4 fijnere micro-lussen (subdivisie).
+// 3. Hilbert Subdivisie (Vloeiende Fractale Ontvouwing met Continue Lichtstroom)
+// - Traploze (sub-pixel) interpolatie van de lichtgolf langs de lijnstukken (geen haperingen)
+// - Continue morf-interpolatie tussen orde 2 (16 punten) en orde 3 (64 punten)
 
 function rot(n, x, y, rx, ry) {
   if (ry === 0) {
@@ -28,10 +28,27 @@ function d2xy(n, d) {
   return [x, y];
 }
 
+// Berekent een exact geïnterpoleerd punt langs het pad op continue positie s in [0, totalPoints]
+function getContinuousPoint(points, s) {
+  const total = points.length;
+  const clampedS = ((s % total) + total) % total;
+  const idx = Math.floor(clampedS);
+  const frac = clampedS - idx;
+  const nextIdx = (idx + 1) % total;
+
+  const p0 = points[idx];
+  const p1 = points[nextIdx];
+
+  return [
+    p0[0] + (p1[0] - p0[0]) * frac,
+    p0[1] + (p1[1] - p0[1]) * frac
+  ];
+}
+
 export function drawHilbert(ctx, pNW, width, height, tile, frame, totalFrames, morphT = 0) {
-  const t = morphT;
-  const nHigh = 8; // 8x8 = 64 punten (orde 3)
-  const nLow = 4;  // 4x4 = 16 punten (orde 2)
+  const t = morphT * morphT * (3 - 2 * morphT); // Smoothstep voor vloeiende vouwing
+  const nHigh = 8; // Orde 3 (64 punten)
+  const nLow = 4;  // Orde 2 (16 punten)
   const totalPoints = nHigh * nHigh;
 
   const stepXHigh = width / nHigh;
@@ -42,27 +59,24 @@ export function drawHilbert(ctx, pNW, width, height, tile, frame, totalFrames, m
   ctx.save();
   ctx.translate(pNW.x, pNW.y);
 
-  // Bereken gevouwen posities geïnterpoleerd tussen orde 2 en orde 3
+  // 1. Bereken hoekpunten geïnterpoleerd tussen orde 2 en orde 3
   const points = [];
   for (let i = 0; i < totalPoints; i++) {
-    // Orde 3 doelpositie
     const [xh, yh] = d2xy(nHigh, i);
     const targetX = (xh + 0.5) * stepXHigh;
     const targetY = (yh + 0.5) * stepYHigh;
 
-    // Orde 2 ouderpositie (4 punten van orde 3 horen bij 1 punt van orde 2)
     const lowIdx = Math.floor(i / 4);
     const [xl, yl] = d2xy(nLow, lowIdx);
     const sourceX = (xl + 0.5) * stepXLow;
     const sourceY = (yl + 0.5) * stepYLow;
 
-    // Morf: van samengevouwen ouder naar ontplooide kind-vorm
     const px = (1 - t) * sourceX + t * targetX;
     const py = (1 - t) * sourceY + t * targetY;
     points.push([px, py]);
   }
 
-  // Teken de dynamisch morpherende curve
+  // 2. Teken de basisstructuur
   ctx.beginPath();
   for (let i = 0; i < totalPoints; i++) {
     const [px, py] = points[i];
@@ -72,30 +86,41 @@ export function drawHilbert(ctx, pNW, width, height, tile, frame, totalFrames, m
       ctx.lineTo(px, py);
     }
   }
-  ctx.strokeStyle = `hsla(${(260 + t * 40) % 360}, 80%, 65%, 0.45)`;
+  ctx.strokeStyle = `hsla(${(260 + t * 45) % 360}, 75%, 60%, 0.35)`;
   ctx.lineWidth = 1.5 + (1 - t) * 1.5;
   ctx.stroke();
 
-  // Lichtgolf over de curve
-  const pulseHead = ((frame / totalFrames) * totalPoints) % totalPoints;
-  const pulseLength = 12;
+  // 3. Traploze, continue lopende lichtgolf (glijdt vloeiend over de segmenten)
+  const continuousHead = (frame / totalFrames) * totalPoints;
+  const trailLength = 14; // Aantal segmenten lengte van de lichtstaart
+  const subSamples = 40;  // Fijne sub-sampling voor volmaakt vloeiende curve
 
   ctx.beginPath();
-  let started = false;
-  for (let k = 0; k < pulseLength; k++) {
-    const idx = (Math.floor(pulseHead - k + totalPoints)) % totalPoints;
-    const [px, py] = points[idx];
-    if (!started) {
+  for (let k = subSamples; k >= 0; k--) {
+    const s = continuousHead - (k / subSamples) * trailLength;
+    const [px, py] = getContinuousPoint(points, s);
+    if (k === subSamples) {
       ctx.moveTo(px, py);
-      started = true;
     } else {
       ctx.lineTo(px, py);
     }
   }
-  ctx.strokeStyle = '#00ffcc';
-  ctx.lineWidth = 3;
+  ctx.strokeStyle = '#00ffd5';
+  ctx.lineWidth = 3.5;
   ctx.lineCap = 'round';
   ctx.stroke();
+
+  // Gloeiende kop van de lichtgolf
+  const [headX, headY] = getContinuousPoint(points, continuousHead);
+  ctx.beginPath();
+  ctx.fillStyle = '#ffffff';
+  ctx.arc(headX, headY, 3.5, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.fillStyle = 'rgba(0, 255, 213, 0.4)';
+  ctx.arc(headX, headY, 8, 0, Math.PI * 2);
+  ctx.fill();
 
   ctx.restore();
 }

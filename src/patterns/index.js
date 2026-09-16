@@ -1,7 +1,6 @@
 import { drawVortex } from './vortex.js';
 import { drawRiver } from './river.js';
 import { drawHilbert } from './hilbert.js';
-import { drawDroste } from './droste.js';
 import { drawTruchet } from './truchet.js';
 
 export const PATTERNS = {
@@ -20,14 +19,9 @@ export const PATTERNS = {
     name: '3. Hilbert-Curve (Space-filling Flow)',
     draw: drawHilbert,
   },
-  droste: {
-    id: 'droste',
-    name: '4. Continu Droste-Zoom (Tunnel)',
-    draw: drawDroste,
-  },
   truchet: {
     id: 'truchet',
-    name: '5. Truchet Labyrint (Continuous Arcs)',
+    name: '4. Truchet Labyrint (Continuous Arcs)',
     draw: drawTruchet,
   },
 };

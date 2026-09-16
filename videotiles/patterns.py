@@ -93,22 +93,6 @@ def generate_hilbert_frame(frame: int, total_frames: int, size: int = 256) -> Im
     return img
 
 
-def generate_droste_frame(frame: int, total_frames: int, size: int = 256) -> Image.Image:
-    """Generate a single frame of the infinite Droste zoom."""
-    img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
-    draw = ImageDraw.Draw(img)
-    cx, cy = size // 2, size // 2
-    num_boxes = 5
-
-    for b in range(num_boxes):
-        scale = (2 ** ((b + (frame / total_frames)) % num_boxes) / (2 ** num_boxes)) * size
-        half = scale / 2
-        alpha = int(40 + (b / num_boxes) * 160)
-        draw.rectangle([cx - half, cy - half, cx + half, cy + half], outline=(255, 200, 0, alpha), width=2)
-
-    return img
-
-
 def generate_truchet_frame(frame: int, total_frames: int, size: int = 256) -> Image.Image:
     """Generate a single frame of the Truchet flow arcs."""
     img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
@@ -132,6 +116,5 @@ PATTERNS = {
     "vortex": generate_vortex_frame,
     "river": generate_river_frame,
     "hilbert": generate_hilbert_frame,
-    "droste": generate_droste_frame,
     "truchet": generate_truchet_frame,
 }

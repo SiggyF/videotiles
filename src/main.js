@@ -37,7 +37,7 @@ map.getCanvasContainer().appendChild(canvas);
 const ctx = canvas.getContext('2d');
 
 let currentFrame = 0;
-const totalFrames = 60;
+const totalFrames = 180; // 3x hogere frameresolutie voor boterzachte animaties
 let isPlaying = true;
 let animationId = null;
 let currentPatternKey = 'vortex';
