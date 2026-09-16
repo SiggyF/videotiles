@@ -1,5 +1,6 @@
-// 3. Hilbert Curve (Ruimtevullende kromme)
-// Quadtree-gebaseerde fractale curve met een pulserende golf van licht/energie
+// 3. Hilbert Subdivisie (Vormverandering via Fractale Vouwing)
+// Bij inzoomen (t: 0 -> 1) vouwt elk lijnsegment van de Hilbert-curve zich soepel uit
+// van een simpele macro-boog naar 4 fijnere micro-lussen (subdivisie).
 
 function rot(n, x, y, rx, ry) {
   if (ry === 0) {
@@ -27,33 +28,55 @@ function d2xy(n, d) {
   return [x, y];
 }
 
-export function drawHilbert(ctx, pNW, width, height, tile, frame, totalFrames) {
-  const order = 3; // 2^3 = 8x8 grid = 64 punten
-  const n = 1 << order;
-  const totalPoints = n * n;
-  const stepX = width / n;
-  const stepY = height / n;
+export function drawHilbert(ctx, pNW, width, height, tile, frame, totalFrames, morphT = 0) {
+  const t = morphT;
+  const nHigh = 8; // 8x8 = 64 punten (orde 3)
+  const nLow = 4;  // 4x4 = 16 punten (orde 2)
+  const totalPoints = nHigh * nHigh;
+
+  const stepXHigh = width / nHigh;
+  const stepYHigh = height / nHigh;
+  const stepXLow = width / nLow;
+  const stepYLow = height / nLow;
 
   ctx.save();
   ctx.translate(pNW.x, pNW.y);
 
-  // Teken de basiscurve
+  // Bereken gevouwen posities geïnterpoleerd tussen orde 2 en orde 3
+  const points = [];
+  for (let i = 0; i < totalPoints; i++) {
+    // Orde 3 doelpositie
+    const [xh, yh] = d2xy(nHigh, i);
+    const targetX = (xh + 0.5) * stepXHigh;
+    const targetY = (yh + 0.5) * stepYHigh;
+
+    // Orde 2 ouderpositie (4 punten van orde 3 horen bij 1 punt van orde 2)
+    const lowIdx = Math.floor(i / 4);
+    const [xl, yl] = d2xy(nLow, lowIdx);
+    const sourceX = (xl + 0.5) * stepXLow;
+    const sourceY = (yl + 0.5) * stepYLow;
+
+    // Morf: van samengevouwen ouder naar ontplooide kind-vorm
+    const px = (1 - t) * sourceX + t * targetX;
+    const py = (1 - t) * sourceY + t * targetY;
+    points.push([px, py]);
+  }
+
+  // Teken de dynamisch morpherende curve
   ctx.beginPath();
   for (let i = 0; i < totalPoints; i++) {
-    const [x, y] = d2xy(n, i);
-    const px = (x + 0.5) * stepX;
-    const py = (y + 0.5) * stepY;
+    const [px, py] = points[i];
     if (i === 0) {
       ctx.moveTo(px, py);
     } else {
       ctx.lineTo(px, py);
     }
   }
-  ctx.strokeStyle = 'rgba(120, 80, 220, 0.35)';
-  ctx.lineWidth = 2;
+  ctx.strokeStyle = `hsla(${(260 + t * 40) % 360}, 80%, 65%, 0.45)`;
+  ctx.lineWidth = 1.5 + (1 - t) * 1.5;
   ctx.stroke();
 
-  // Animerende lopende golf / pulse over de curve
+  // Lichtgolf over de curve
   const pulseHead = ((frame / totalFrames) * totalPoints) % totalPoints;
   const pulseLength = 12;
 
@@ -61,9 +84,7 @@ export function drawHilbert(ctx, pNW, width, height, tile, frame, totalFrames) {
   let started = false;
   for (let k = 0; k < pulseLength; k++) {
     const idx = (Math.floor(pulseHead - k + totalPoints)) % totalPoints;
-    const [x, y] = d2xy(n, idx);
-    const px = (x + 0.5) * stepX;
-    const py = (y + 0.5) * stepY;
+    const [px, py] = points[idx];
     if (!started) {
       ctx.moveTo(px, py);
       started = true;
@@ -72,10 +93,8 @@ export function drawHilbert(ctx, pNW, width, height, tile, frame, totalFrames) {
     }
   }
   ctx.strokeStyle = '#00ffcc';
-  ctx.lineWidth = 3.5;
+  ctx.lineWidth = 3;
   ctx.lineCap = 'round';
-  ctx.shadowColor = '#00ffcc';
-  ctx.shadowBlur = 8;
   ctx.stroke();
 
   ctx.restore();
