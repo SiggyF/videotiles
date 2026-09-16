@@ -94,7 +94,6 @@ function getVisibleTilesForZoom(zoom) {
 
 const hudZoom = document.getElementById('hud-zoom');
 const hudTotal = document.getElementById('hud-total');
-const hudDim = document.getElementById('hud-dim');
 
 function formatPixelCount(pixels) {
   if (pixels >= 1e15) return `${(pixels / 1e15).toFixed(1)} Petapixels`;
@@ -120,7 +119,6 @@ function render() {
 
   if (hudZoom) hudZoom.textContent = zFloat.toFixed(2);
   if (hudTotal) hudTotal.textContent = formatPixelCount(totalPixels);
-  if (hudDim) hudDim.textContent = `${worldDim.toLocaleString('nl-NL')} × ${worldDim.toLocaleString('nl-NL')}`;
 
   const tiles = getVisibleTilesForZoom(zBase);
 
