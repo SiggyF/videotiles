@@ -34,21 +34,21 @@ def generate_vortex_frame(frame: int, total_frames: int, size: int = 256) -> Ima
 
 
 def generate_river_frame(frame: int, total_frames: int, size: int = 256) -> Image.Image:
-    """Generate a single frame of the branching river tree with alpha transparency."""
+    """Generate a single frame of the branching river network with alpha transparency."""
     img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     draw = ImageDraw.Draw(img)
-    offset = int((frame / total_frames) * 20)
+    mid = size * 0.5
 
-    # Main trunk
-    draw.line([(size * 0.5, 0), (size * 0.5, size * 0.45)], fill=(0, 170, 255, 220), width=5)
+    # 1. Main North-South river: (0.5, 0) -> (0.5, 1)
+    draw.line([(mid, 0), (mid, size)], fill=(0, 180, 216, 230), width=5)
 
-    # Left & right branches
-    draw.line([(size * 0.5, size * 0.45), (size * 0.25, size)], fill=(50, 200, 255, 200), width=3)
-    draw.line([(size * 0.5, size * 0.45), (size * 0.75, size)], fill=(50, 200, 255, 200), width=3)
+    # 2. Tributaries from West (0, 0.5) and East (1, 0.5) merging into (0.5, 0.6)
+    draw.line([(0, mid), (mid * 0.6, mid * 1.1), (mid, size * 0.6)], fill=(72, 202, 228, 210), width=3)
+    draw.line([(size, mid), (size - mid * 0.6, mid * 1.1), (mid, size * 0.6)], fill=(72, 202, 228, 210), width=3)
 
-    # Moving water pulse markers
-    pulse_y = (offset * 12) % size
-    draw.ellipse([size * 0.5 - 4, pulse_y - 4, size * 0.5 + 4, pulse_y + 4], fill=(200, 245, 255, 255))
+    # 3. Moving water pulse markers along the main river
+    pulse_y = int((frame / total_frames) * size)
+    draw.ellipse([mid - 4, pulse_y - 4, mid + 4, pulse_y + 4], fill=(202, 240, 248, 255))
 
     return img
 

@@ -3,7 +3,10 @@
 // Hierdoor ontstaat over alle tegelgrenzen en zoomniveaus heen een oneindig vloeiend netwerk.
 
 export function drawTruchet(ctx, pNW, width, height, tile, frame, totalFrames) {
-  const flowOffset = (frame / totalFrames) * 20;
+  const dashLength = 8;
+  const dashGap = 6;
+  const period = dashLength + dashGap; // 14
+  const flowOffset = (frame / totalFrames) * period * 2; // Exact multiple for seamless looping
 
   ctx.save();
   ctx.translate(pNW.x, pNW.y);

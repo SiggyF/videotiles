@@ -1,69 +1,87 @@
-// 2. Branching River Tree (Fractale Rivierdelta)
-// Water stroomt van de bovenrand (x=0.5) en splitst in twee armen naar beneden (x=0.25 en x=0.75).
+// 2. Branching River Network (Fractale Rivier / Hydrologisch Netwerk)
+// Sluit naadloos aan op alle buurtegels:
+// - Noord-Zuid: hoofdstroom loopt van (0.5, 0) naar (0.5, 1)
+// - Oost-West: zijtakken komen binnen op (0, 0.5) en (1, 0.5) en monden uit in de hoofdstroom
+// - Kwadranten: zelfgelijkende subtakken die binnen elk kwadrant ontspringen
 
 export function drawRiver(ctx, pNW, width, height, tile, frame, totalFrames) {
-  const flowOffset = (frame / totalFrames) * 32;
+  const dashLength = 16;
+  const dashGap = 8;
+  const period = dashLength + dashGap;
+  const flowOffset = (frame / totalFrames) * period;
 
   ctx.save();
   ctx.translate(pNW.x, pNW.y);
 
-  const topX = width * 0.5;
-  const topY = 0;
+  // 1. Hoofdstroom van Noord naar Zuid: (0.5, 0) -> (0.5, 1)
   const midX = width * 0.5;
-  const midY = height * 0.45;
-  const leftBottomX = width * 0.25;
-  const rightBottomX = width * 0.75;
-  const bottomY = height;
-
-  // Hoofdstroom
   ctx.beginPath();
-  ctx.moveTo(topX, topY);
-  ctx.lineTo(midX, midY);
-  ctx.strokeStyle = '#00aaff';
+  ctx.moveTo(midX, 0);
+  ctx.lineTo(midX, height);
+  ctx.strokeStyle = '#00b4d8';
   ctx.lineWidth = 4;
   ctx.lineCap = 'round';
-  ctx.setLineDash([12, 6]);
+  ctx.setLineDash([dashLength, dashGap]);
   ctx.lineDashOffset = -flowOffset;
   ctx.stroke();
 
-  // Linkertak
+  // 2. Westelijke zijrivier: (0, 0.5) mondt uit in de hoofdstroom (0.5, 0.5)
   ctx.beginPath();
-  ctx.moveTo(midX, midY);
-  ctx.bezierCurveTo(midX - width * 0.1, midY + height * 0.2, leftBottomX, midY + height * 0.3, leftBottomX, bottomY);
-  ctx.strokeStyle = '#33ccff';
+  ctx.moveTo(0, height * 0.5);
+  ctx.bezierCurveTo(
+    width * 0.25, height * 0.5,
+    width * 0.35, height * 0.55,
+    midX, height * 0.6
+  );
+  ctx.strokeStyle = '#48cae4';
   ctx.lineWidth = 2.5;
-  ctx.setLineDash([10, 5]);
-  ctx.lineDashOffset = -flowOffset * 1.2;
+  ctx.setLineDash([dashLength * 0.75, dashGap]);
+  ctx.lineDashOffset = -flowOffset;
   ctx.stroke();
 
-  // Rechtertak
+  // 3. Oostelijke zijrivier: (1, 0.5) mondt uit in de hoofdstroom (0.5, 0.5)
   ctx.beginPath();
-  ctx.moveTo(midX, midY);
-  ctx.bezierCurveTo(midX + width * 0.1, midY + height * 0.2, rightBottomX, midY + height * 0.3, rightBottomX, bottomY);
-  ctx.strokeStyle = '#33ccff';
+  ctx.moveTo(width, height * 0.5);
+  ctx.bezierCurveTo(
+    width * 0.75, height * 0.5,
+    width * 0.65, height * 0.55,
+    midX, height * 0.6
+  );
+  ctx.strokeStyle = '#48cae4';
   ctx.lineWidth = 2.5;
-  ctx.setLineDash([10, 5]);
-  ctx.lineDashOffset = -flowOffset * 1.2;
+  ctx.setLineDash([dashLength * 0.75, dashGap]);
+  ctx.lineDashOffset = -flowOffset;
   ctx.stroke();
 
-  // Sub-vertakkingen in de onderste kwadranten voor diepe zelfgelijkendheid
+  // 4. Subtakken in de 4 kwadranten (orde 2 en 3 in Horton-Strahler schaal)
   const subBranches = [
-    { startX: leftBottomX, endX1: width * 0.125, endX2: width * 0.375, y: height * 0.75 },
-    { startX: rightBottomX, endX1: width * 0.625, endX2: width * 0.875, y: height * 0.75 }
+    // Linksboven: ontspringt in hoek en voedt de noordstroom
+    { x0: width * 0.15, y0: height * 0.15, cx: width * 0.3, cy: height * 0.2, x1: midX, y1: height * 0.3 },
+    // Rechtsboven: ontspringt in hoek en voedt de noordstroom
+    { x0: width * 0.85, y0: height * 0.15, cx: width * 0.7, cy: height * 0.2, x1: midX, y1: height * 0.3 },
+    // Linksonder: ontspringt en voedt de zuidstroom
+    { x0: width * 0.2, y0: height * 0.85, cx: width * 0.3, cy: height * 0.8, x1: midX, y1: height * 0.75 },
+    // Rechtsonder: ontspringt en voedt de zuidstroom
+    { x0: width * 0.8, y0: height * 0.85, cx: width * 0.7, cy: height * 0.8, x1: midX, y1: height * 0.75 }
   ];
 
-  for (const branch of subBranches) {
+  ctx.strokeStyle = '#90e0ef';
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([dashLength * 0.5, dashGap]);
+  ctx.lineDashOffset = -flowOffset * 0.8;
+
+  for (const b of subBranches) {
     ctx.beginPath();
-    ctx.moveTo(branch.startX, branch.y);
-    ctx.lineTo(branch.endX1, bottomY);
-    ctx.moveTo(branch.startX, branch.y);
-    ctx.lineTo(branch.endX2, bottomY);
-    ctx.strokeStyle = '#70dbff';
-    ctx.lineWidth = 1.5;
-    ctx.setLineDash([6, 4]);
-    ctx.lineDashOffset = -flowOffset * 1.5;
+    ctx.moveTo(b.x0, b.y0);
+    ctx.quadraticCurveTo(b.cx, b.cy, b.x1, b.y1);
     ctx.stroke();
   }
+
+  // 5. Gloeiende knooppunt-marker op de samenvloeiing
+  ctx.beginPath();
+  ctx.fillStyle = '#caf0f8';
+  ctx.arc(midX, height * 0.6, 3, 0, Math.PI * 2);
+  ctx.fill();
 
   ctx.restore();
 }

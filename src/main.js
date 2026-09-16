@@ -6,18 +6,20 @@ const map = new maplibregl.Map({
   style: {
     version: 8,
     sources: {
-      carto: {
+      esri_dark: {
         type: 'raster',
-        tiles: ['https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png'],
+        tiles: [
+          'https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+        ],
         tileSize: 256,
-        attribution: '© OpenStreetMap contributors, © CARTO',
+        attribution: '© Esri, HERE, Garmin, © OpenStreetMap contributors',
       },
     },
     layers: [
       {
-        id: 'carto-layer',
+        id: 'esri-dark-layer',
         type: 'raster',
-        source: 'carto',
+        source: 'esri_dark',
         minzoom: 0,
         maxzoom: 19,
       },
