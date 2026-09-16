@@ -37,22 +37,8 @@ export function drawVortex(ctx, pNW, width, height, tile, frame, totalFrames, mo
 
   for (const v of centers) {
     const size = v.radius * 2.6;
-
     if (decoder && decoder.isReady) {
-      // ECHTE VIDEO: Teken het hardware-gedecodeerde VideoFrame uit de WebM
       decoder.drawFrame(frame, ctx, v.cx - size / 2, v.cy - size / 2, size, size, v.spin, v.opacity);
-    } else {
-      // Fallback tijdens asynchrone WebM-inlaadstap
-      const rot = ((frame / totalFrames) * 2 * Math.PI) * v.spin;
-      ctx.save();
-      ctx.translate(v.cx, v.cy);
-      ctx.rotate(rot);
-      ctx.beginPath();
-      ctx.strokeStyle = `rgba(0, 210, 255, ${0.45 * v.opacity})`;
-      ctx.lineWidth = 2.0;
-      ctx.arc(0, 0, v.radius * 0.8, 0, Math.PI);
-      ctx.stroke();
-      ctx.restore();
     }
   }
 

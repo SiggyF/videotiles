@@ -1,11 +1,9 @@
 import { drawVortex } from './patterns/vortex.js';
 import { VideoTileDecoder } from './decoder.js';
 
-// Initialiseer de WebCodecs decoder voor de echte WebM videotile
+// Initialiseer de WebCodecs decoder voor de WebM videotile
 const videoDecoder = new VideoTileDecoder();
-videoDecoder.load('./tiles/vortex.webm').catch((err) => {
-  console.warn('WebCodecs video kon niet laden, terugvallen op vector:', err);
-});
+await videoDecoder.load('./tiles/vortex.webm');
 
 // MapLibre GL kaart initialisatie met pure zwarte achtergrond
 const map = new maplibregl.Map({
