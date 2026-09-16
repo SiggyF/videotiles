@@ -38,7 +38,7 @@ const ctx = canvas.getContext('2d');
 
 let currentFrame = 0;
 const totalFrames = 60;
-let isPlaying = false;
+let isPlaying = true;
 let animationId = null;
 let currentPatternKey = 'vortex';
 let showGrid = true;
@@ -47,10 +47,6 @@ let showGrid = true;
 const patternSelect = document.getElementById('pattern-select');
 const zoomLabel = document.getElementById('zoom-level');
 const tileCountLabel = document.getElementById('tile-count');
-const frameDisplay = document.getElementById('frame-display');
-const statusDisplay = document.getElementById('status-display');
-const frameSlider = document.getElementById('frame-slider');
-const playBtn = document.getElementById('play-btn');
 const toggleGrid = document.getElementById('toggle-grid');
 
 // Vul de select-opties met de 5 patronen
@@ -186,8 +182,6 @@ function render() {
 
   zoomLabel.textContent = `${zFloat.toFixed(2)} (Z${zBase}: ${basePercent}% / Z${childZoom}: ${childPercent}%)`;
   tileCountLabel.textContent = `${totalVisible} (${baseTiles.length} + ${childTiles.length})`;
-  frameDisplay.textContent = `${currentFrame} / ${totalFrames}`;
-  statusDisplay.textContent = isPlaying ? 'Afspelen (60fps)' : 'Gepauzeerd';
 
   // 1. Render basis zoomniveau (ouderlaag) met geleidelijk afnemende opaciteit (1 - t)
   renderTileLayer(baseTiles, 1 - t, false, zFloat);
@@ -198,31 +192,14 @@ function render() {
   }
 }
 
-// Centrale synchrone tijdlijn
+// Centrale continue renderloop
 function tick() {
   if (isPlaying) {
     currentFrame = (currentFrame + 1) % totalFrames;
-    frameSlider.value = currentFrame;
     render();
     animationId = requestAnimationFrame(tick);
   }
 }
-
-playBtn.addEventListener('click', () => {
-  isPlaying = !isPlaying;
-  playBtn.textContent = isPlaying ? 'Pause' : 'Play';
-  if (isPlaying) {
-    tick();
-  } else if (animationId) {
-    cancelAnimationFrame(animationId);
-    statusDisplay.textContent = 'Gepauzeerd';
-  }
-});
-
-frameSlider.addEventListener('input', (e) => {
-  currentFrame = parseInt(e.target.value, 10);
-  render();
-});
 
 map.on('resize', () => {
   resizeCanvas();
@@ -233,4 +210,5 @@ map.on('move', render);
 map.on('load', () => {
   resizeCanvas();
   render();
+  tick();
 });
