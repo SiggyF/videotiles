@@ -5,23 +5,14 @@ const map = new maplibregl.Map({
   container: 'map',
   style: {
     version: 8,
-    sources: {
-      esri_dark: {
-        type: 'raster',
-        tiles: [
-          'https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
-        ],
-        tileSize: 256,
-        attribution: '© Esri, HERE, Garmin, © OpenStreetMap contributors',
-      },
-    },
+    sources: {},
     layers: [
       {
-        id: 'esri-dark-layer',
-        type: 'raster',
-        source: 'esri_dark',
-        minzoom: 0,
-        maxzoom: 19,
+        id: 'background',
+        type: 'background',
+        paint: {
+          'background-color': '#000000',
+        },
       },
     ],
   },
