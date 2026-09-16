@@ -1,6 +1,6 @@
-import { PATTERNS } from './patterns/index.js';
+import { drawVortex } from './patterns/vortex.js';
 
-// MapLibre GL kaart initialisatie met CartoDB Dark Matter / Positron of OSM
+// MapLibre GL kaart initialisatie met pure zwarte achtergrond
 const map = new maplibregl.Map({
   container: 'map',
   style: {
@@ -37,38 +37,9 @@ map.getCanvasContainer().appendChild(canvas);
 const ctx = canvas.getContext('2d');
 
 let currentFrame = 0;
-const totalFrames = 180; // 3x hogere frameresolutie voor boterzachte animaties
-let isPlaying = true;
+const totalFrames = 180;
+const isPlaying = true;
 let animationId = null;
-let currentPatternKey = 'vortex';
-let showGrid = true;
-
-// UI elementen
-const patternSelect = document.getElementById('pattern-select');
-const zoomLabel = document.getElementById('zoom-level');
-const tileCountLabel = document.getElementById('tile-count');
-const playBtn = document.getElementById('play-btn');
-const toggleGrid = document.getElementById('toggle-grid');
-
-// Vul de select-opties met de 5 patronen
-Object.values(PATTERNS).forEach((pattern) => {
-  const opt = document.createElement('option');
-  opt.value = pattern.id;
-  opt.textContent = pattern.name;
-  patternSelect.appendChild(opt);
-});
-
-patternSelect.value = currentPatternKey;
-
-patternSelect.addEventListener('change', (e) => {
-  currentPatternKey = e.target.value;
-  render();
-});
-
-toggleGrid.addEventListener('change', (e) => {
-  showGrid = e.target.checked;
-  render();
-});
 
 function resizeCanvas() {
   const rect = map.getCanvas().getBoundingClientRect();
@@ -100,7 +71,6 @@ function tileToLngLat(x, y, zoom) {
 
 // Bepaal de zichtbare tegels voor een specifiek zoomniveau
 function getVisibleTilesForZoom(zoom) {
-  const n = Math.pow(2, zoom);
   const bounds = map.getBounds();
   const nw = bounds.getNorthWest();
   const se = bounds.getSouthEast();
@@ -122,7 +92,7 @@ function getVisibleTilesForZoom(zoom) {
   return tiles;
 }
 
-// Renderloop: vloeiende geometrische vormverandering (mitose / morphing)
+// Renderloop: vloeiende geometrische wervelcascade (mitose / morphing)
 function render() {
   const rect = map.getCanvas().getBoundingClientRect();
   ctx.clearRect(0, 0, rect.width, rect.height);
@@ -132,11 +102,6 @@ function render() {
   const morphT = zFloat - zBase; // Fractie 0.0 tot 1.0 voor vormverandering
 
   const tiles = getVisibleTilesForZoom(zBase);
-  zoomLabel.textContent = `${zFloat.toFixed(2)} (Z${zBase}, Morf: ${Math.round(morphT * 100)}%)`;
-  tileCountLabel.textContent = tiles.length;
-
-  const pattern = PATTERNS[currentPatternKey];
-  if (!pattern) return;
 
   for (const tile of tiles) {
     const nw = tileToLngLat(tile.x, tile.y, tile.z);
@@ -147,25 +112,12 @@ function render() {
     const width = pSE.x - pNW.x;
     const height = pSE.y - pNW.y;
 
-    // Vormverandering: geef morphT mee aan de wiskundige patroongenerator
-    pattern.draw(ctx, pNW, width, height, tile, currentFrame, totalFrames, morphT);
-
-    // Optionele tegelgrenzen en XYZ-labels
-    if (showGrid) {
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
-      ctx.lineWidth = 1;
-      ctx.setLineDash([4, 4]);
-      ctx.strokeRect(pNW.x, pNW.y, width, height);
-      ctx.setLineDash([]);
-
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.65)';
-      ctx.font = '10px monospace';
-      ctx.fillText(`${tile.z}/${tile.x}/${tile.y}`, pNW.x + 6, pNW.y + 14);
-    }
+    // Teken de wervelcascade met continue mitose
+    drawVortex(ctx, pNW, width, height, tile, currentFrame, totalFrames, morphT);
   }
 }
 
-// Centrale continue renderloop
+// Centrale continue renderloop (autoplay)
 function tick() {
   if (isPlaying) {
     currentFrame = (currentFrame + 1) % totalFrames;
@@ -173,17 +125,6 @@ function tick() {
     animationId = requestAnimationFrame(tick);
   }
 }
-
-playBtn.addEventListener('click', () => {
-  isPlaying = !isPlaying;
-  playBtn.textContent = isPlaying ? 'Pause' : 'Play';
-  playBtn.className = isPlaying ? 'primary' : '';
-  if (isPlaying) {
-    tick();
-  } else if (animationId) {
-    cancelAnimationFrame(animationId);
-  }
-});
 
 map.on('resize', () => {
   resizeCanvas();
