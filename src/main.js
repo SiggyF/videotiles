@@ -40,11 +40,6 @@ map.getCanvasContainer().appendChild(canvas);
 
 const ctx = canvas.getContext('2d');
 
-let currentFrame = 0;
-const totalFrames = 180;
-const isPlaying = true;
-let animationId = null;
-
 function resizeCanvas() {
   const rect = map.getCanvas().getBoundingClientRect();
   const dpr = window.devicePixelRatio || 1;
@@ -122,6 +117,7 @@ function render() {
 
   const zFloat = map.getZoom();
   const zBase = Math.floor(zFloat);
+  const zoomFraction = zFloat - zBase; // 0.0 tot 1.0 (transitie naar hoger zoomniveau)
 
   // Bereken totale wereldresolutie op dit continue zoomniveau
   const worldDim = Math.round(256 * Math.pow(2, zFloat));
@@ -130,6 +126,9 @@ function render() {
 
   if (hudDim) hudDim.textContent = `${dimStr} px × ${dimStr} px`;
   if (hudWord) hudWord.textContent = formatPixelQuantity(totalPixels);
+
+  const totalFrames = videoDecoder.frames.length || 90;
+  const frameIndex = Math.min(totalFrames - 1, Math.max(0, Math.floor(zoomFraction * totalFrames)));
 
   const tiles = getVisibleTilesForZoom(zBase);
 
@@ -143,16 +142,7 @@ function render() {
     const height = pSE.y - pNW.y;
 
     // Teken het WebCodecs videotile-frame direct op de tegelcoördinaten
-    videoDecoder.drawTile(currentFrame, ctx, pNW.x, pNW.y, width, height);
-  }
-}
-
-// Centrale continue renderloop (autoplay)
-function tick() {
-  if (isPlaying) {
-    currentFrame = (currentFrame + 1) % totalFrames;
-    render();
-    animationId = requestAnimationFrame(tick);
+    videoDecoder.drawTile(frameIndex, ctx, pNW.x, pNW.y, width, height);
   }
 }
 
@@ -162,8 +152,8 @@ map.on('resize', () => {
 });
 
 map.on('move', render);
-map.on('load', () => {
-  resizeCanvas();
-  render();
-  tick();
-});
+map.on('zoom', render);
+map.on('render', render);
+
+resizeCanvas();
+render();
