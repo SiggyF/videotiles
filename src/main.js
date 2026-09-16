@@ -92,6 +92,7 @@ function getVisibleTilesForZoom(zoom) {
   return tiles;
 }
 
+const hudDim = document.getElementById('hud-dim');
 const hudWord = document.getElementById('hud-word');
 
 function getScaleWord(pixels) {
@@ -114,7 +115,9 @@ function render() {
   // Bereken totale wereldresolutie op dit continue zoomniveau
   const worldDim = Math.round(256 * Math.pow(2, zFloat));
   const totalPixels = worldDim * worldDim;
+  const dimStr = worldDim.toLocaleString('nl-NL');
 
+  if (hudDim) hudDim.textContent = `${dimStr} px × ${dimStr} px`;
   if (hudWord) hudWord.textContent = getScaleWord(totalPixels);
 
   const tiles = getVisibleTilesForZoom(zBase);
