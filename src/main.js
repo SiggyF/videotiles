@@ -92,16 +92,14 @@ function getVisibleTilesForZoom(zoom) {
   return tiles;
 }
 
-const hudZoom = document.getElementById('hud-zoom');
-const hudTotal = document.getElementById('hud-total');
+const hudWord = document.getElementById('hud-word');
 
-function formatPixelCount(pixels) {
-  if (pixels >= 1e15) return `${(pixels / 1e15).toFixed(1)} Petapixels`;
-  if (pixels >= 1e12) return `${(pixels / 1e12).toFixed(1)} Terapixels`;
-  if (pixels >= 1e9) return `${(pixels / 1e9).toFixed(1)} Gigapixels`;
-  if (pixels >= 1e6) return `${(pixels / 1e6).toFixed(1)} Megapixels`;
-  if (pixels >= 1e3) return `${Math.round(pixels / 1e3)} Kilopixels`;
-  return `${Math.round(pixels)} pixels`;
+function getScaleWord(pixels) {
+  if (pixels >= 1e15) return 'Petapixels';
+  if (pixels >= 1e12) return 'Terapixels';
+  if (pixels >= 1e9) return 'Gigapixels';
+  if (pixels >= 1e6) return 'Megapixels';
+  return 'Kilopixels';
 }
 
 // Renderloop: vloeiende geometrische wervelcascade (mitose / morphing)
@@ -117,8 +115,7 @@ function render() {
   const worldDim = Math.round(256 * Math.pow(2, zFloat));
   const totalPixels = worldDim * worldDim;
 
-  if (hudZoom) hudZoom.textContent = zFloat.toFixed(2);
-  if (hudTotal) hudTotal.textContent = formatPixelCount(totalPixels);
+  if (hudWord) hudWord.textContent = getScaleWord(totalPixels);
 
   const tiles = getVisibleTilesForZoom(zBase);
 
