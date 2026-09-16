@@ -95,12 +95,20 @@ function getVisibleTilesForZoom(zoom) {
 const hudDim = document.getElementById('hud-dim');
 const hudWord = document.getElementById('hud-word');
 
-function getScaleWord(pixels) {
-  if (pixels >= 1e15) return 'Petapixels';
-  if (pixels >= 1e12) return 'Terapixels';
-  if (pixels >= 1e9) return 'Gigapixels';
-  if (pixels >= 1e6) return 'Megapixels';
-  return 'Kilopixels';
+function formatPixelQuantity(pixels) {
+  if (pixels >= 1e15) {
+    return `${(pixels / 1e15).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} Petapixels`;
+  }
+  if (pixels >= 1e12) {
+    return `${(pixels / 1e12).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} Terapixels`;
+  }
+  if (pixels >= 1e9) {
+    return `${(pixels / 1e9).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} Gigapixels`;
+  }
+  if (pixels >= 1e6) {
+    return `${(pixels / 1e6).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} Megapixels`;
+  }
+  return `${(pixels / 1e3).toLocaleString('nl-NL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} Kilopixels`;
 }
 
 // Renderloop: vloeiende geometrische wervelcascade (mitose / morphing)
@@ -118,7 +126,7 @@ function render() {
   const dimStr = worldDim.toLocaleString('nl-NL');
 
   if (hudDim) hudDim.textContent = `${dimStr} px × ${dimStr} px`;
-  if (hudWord) hudWord.textContent = getScaleWord(totalPixels);
+  if (hudWord) hudWord.textContent = formatPixelQuantity(totalPixels);
 
   const tiles = getVisibleTilesForZoom(zBase);
 
